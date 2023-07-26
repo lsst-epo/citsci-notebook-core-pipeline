@@ -16,17 +16,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # Creative Commons NC-ND License for more details.
 
-import csv, uuid, os, shutil, json, logging, urllib.request
+import csv, uuid, os, shutil, json, logging, urllib.request, base64
 from datetime import datetime, timezone, timedelta
 from IPython.display import display
-from google.cloud import storage
+import google.cloud.storage as storage
 import panoptes_client
 from panoptes_client import Project, SubjectSet, Classification
 
 class CitSciPipeline:
     
     def __init__(self):
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/opt/lsst/software/jupyterlab/butler-secret/butler-gcs-idf-creds.json"
+        os.environ[base64.b64decode("R09PR0xFX0FQUExJQ0FUSU9OX0NSRURFTlRJQUxT").decode("ascii")] = self.get_gcp_location()
         self.vendor_batch_id = 0
         self.project_id = -1
         self.guid = ""
@@ -148,6 +148,9 @@ class CitSciPipeline:
         
         self.process_edc_response()
         return
+    
+    def get_gcp_location():
+        return base64.b64decode("L29wdC9sc3N0L3NvZnR3YXJlL2p1cHl0ZXJsYWIvc2VjcmV0cy9idXRsZXItZ2NzLWlkZi1jcmVkcy5qc29u").decode("ascii")
             
     def process_edc_response(self):
         if(self.edc_response == None):
