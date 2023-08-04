@@ -1,0 +1,23 @@
+name: 'Build and publish package to PyPI'
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "v*" # Any tags created as part of a release
+
+jobs:
+  build-and-publish:
+    name: "Build and Publish to PyPI"
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build and publish
+        uses: lsst-sqre/build-and-publish-to-pypi@v2
+        with:
+          python-version: "3.11"
+          upload: true
