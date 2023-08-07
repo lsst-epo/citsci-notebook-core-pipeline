@@ -6,26 +6,26 @@ on:
   release:
     types: [published]
 
-  jobs:
-    pypi-publish:
-      name: Upload release to PyPI
-      runs-on: ubuntu-latest
-      environment:
-        name: pypi
-        url: https://pypi.org/project/citsci-notebook-core-pipeline/
-      permissions:
-        id-token: write
-      if: github.event_name == 'release' && github.event.action == 'published'
+jobs:
+  pypi-publish:
+    name: Upload release to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/citsci-notebook-core-pipeline/
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published'
 
-      steps:
-        - name: Quick test
-           run: echo "quick test!"
-           
-        - uses: actions/checkout@v3
-          with:
-            fetch-depth: 0 # full history for setuptools_scm
+    steps:
+      - name: Quick test
+        run: echo "quick test!"
+        
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # full history for setuptools_scm
 
-        - name: Build and publish
-          uses: lsst-sqre/build-and-publish-to-pypi@v2
-          with:
-            python-version: "3.11"
+      - name: Build and publish
+        uses: lsst-sqre/build-and-publish-to-pypi@v2
+        with:
+          python-version: "3.11"
