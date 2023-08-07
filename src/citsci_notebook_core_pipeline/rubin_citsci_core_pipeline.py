@@ -215,6 +215,25 @@ class CitSciPipeline:
         except Exception as e:
             self.clean_up_unused_subject_set()
             return None
+        
+    def retrieve_data(self, project_id):
+        # panoptes_client.Panoptes.connect(login="interactive")
+        # This project_id is found on Zooniverse by selecting 'build a project' and then selecting the project
+        # You don't need to be the project owner.
+        classification_export = panoptes_client.Project(project_id).get_export(
+            "classifications"
+        )
+        list_rows = []
+        # counter = 0
+        # If the following line throws an error, restart the kernel and rerun the cell.
+        for row in classification_export.csv_reader():
+            # if counter == 0:
+            #     header = row
+            # else:
+            list_rows.append(row)
+            # counter += 1
+        # return pd.DataFrame(list_rows, columns=header)
+        return list_rows
 
     # def send_butler_data_to_edc():
     #     log_step("Notifying the Rubin EPO Data Center of the new data, which will finish processing of the data and notify Zooniverse")
@@ -243,13 +262,13 @@ class CitSciPipeline:
         display(str(self.step) + ". " + msg)
         return
 
-    # Custom error handling for this notebook
-    class CitizenScienceError(Exception):
+# Custom error handling for this notebook
+class CitizenScienceError(Exception):
 
-        # Constructor or Initializer
-        def __init__(self, value):
-            self.value = value
+    # Constructor or Initializer
+    def __init__(self, value):
+        self.value = value
 
-        # __str__ is to print() the value
-        def __str__(self):
-            return(repr(self.value))
+    # __str__ is to print() the value
+    def __str__(self):
+        return(repr(self.value))
