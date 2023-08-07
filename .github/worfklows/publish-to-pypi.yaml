@@ -1,11 +1,6 @@
 name: 'Build and publish package to PyPI'
 
 on:
-  # push:
-  #   branches:
-  #     - "!*"
-    # tags:
-    #   - "v*" # Any tags created as part of a release
   push: {}
   pull_request: {}
   release:
@@ -18,11 +13,14 @@ on:
       environment:
         name: pypi
         url: https://pypi.org/project/citsci-notebook-core-pipeline/
-      # permissions:
-      #   id-token: write
+      permissions:
+        id-token: write
       if: github.event_name == 'release' && github.event.action == 'published'
 
       steps:
+        - name: Quick test
+           run: echo "quick test!"
+           
         - uses: actions/checkout@v3
           with:
             fetch-depth: 0 # full history for setuptools_scm
@@ -31,18 +29,3 @@ on:
           uses: lsst-sqre/build-and-publish-to-pypi@v2
           with:
             python-version: "3.11"
-# jobs:
-#   build-and-publish:
-#     name: "Build and Publish to PyPI"
-#     runs-on: ubuntu-latest
-#     if: ${{ github.event.action != 'closed'}}
-
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@v2
-
-#     - name: Build and publish
-#         uses: lsst-sqre/build-and-publish-to-pypi@v2
-#         with:
-#           python-version: "3.11"
-#           upload: true
