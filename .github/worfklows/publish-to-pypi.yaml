@@ -11,6 +11,7 @@ jobs:
   build-and-publish:
     name: "Build and Publish to PyPI"
     runs-on: ubuntu-latest
+    if: ${{ github.event.action != 'closed'}}
 
     steps:
     - name: Checkout
