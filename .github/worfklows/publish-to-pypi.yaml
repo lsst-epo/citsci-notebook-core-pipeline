@@ -6,6 +6,8 @@ on:
   #     - "!*"
     # tags:
     #   - "v*" # Any tags created as part of a release
+  push: {}
+  pull_request: {}
   release:
     types: [published]
 
@@ -13,9 +15,9 @@ on:
     pypi-publish:
       name: Upload release to PyPI
       runs-on: ubuntu-latest
-      # environment:
-      #   name: pypi
-      #   url: https://pypi.org/project/citsci-notebook-core-pipeline/
+      environment:
+        name: pypi
+        url: https://pypi.org/project/citsci-notebook-core-pipeline/
       # permissions:
       #   id-token: write
       if: github.event_name == 'release' && github.event.action == 'published'
