@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/citsci-notebook-core-pipeline/
+      url: https://pypi.org/p/citsci-notebook-core-pipeline/
     permissions:
       id-token: write
     if: github.event_name == 'release' && github.event.action == 'published'
