@@ -36,6 +36,11 @@ class CitSciPipeline:
         self.email = ""
         self.project = None
         self.client = None
+        if os.getenv("CITSCI_PIPELINE_DEV_MODE") is not None:
+            self.dev_mode_url = "-dev"
+            print("Development mode enabled.")
+        else:
+            self.dev_mode_url = ""
 
     def login_to_zooniverse(self, slug_name, email):
         self.client = panoptes_client.Panoptes.connect(login="interactive")
@@ -93,14 +98,14 @@ class CitSciPipeline:
         return self.vendor_batch_id
 
     def check_status(self):
-        status_uri = "https://rsp-data-exporter-dot-skyviewer.uw.r.appspot.com/citizen-science-ingest-status?guid=" + self.guid
+        status_uri = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/citizen-science-ingest-status?guid=" + self.guid
         raw_response = urllib.request.urlopen(status_uri).read()
         response = raw_response.decode('UTF-8')
         return json.loads(response)
 
     def download_batch_metadata(self):
         project_id_str = str(self.project_id)
-        dl_response = "https://rsp-data-exporter-dot-skyviewer.uw.r.appspot.com/active-batch-metadata?vendor_project_id=" + project_id_str
+        dl_response = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/active-batch-metadata?vendor_project_id=" + project_id_str
         raw_response = urllib.request.urlopen(dl_response).read()
         response = raw_response.decode('UTF-8')
         return json.loads(response)
@@ -206,7 +211,7 @@ class CitSciPipeline:
 
         try:
             resource = "citizen-science-image-ingest" if tabular == False else "citizen-science-tabular-ingest"
-            edc_endpoint = "https://rsp-data-exporter-dot-skyviewer.uw.r.appspot.com/" + resource + "?email=" + self.email + "&vendor_project_id=" + project_id_str + "&guid=" + self.guid + "&vendor_batch_id=" + str(self.vendor_batch_id) + "&debug=True"
+            edc_endpoint = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/" + resource + "?email=" + self.email + "&vendor_project_id=" + project_id_str + "&guid=" + self.guid + "&vendor_batch_id=" + str(self.vendor_batch_id) + "&debug=True"
             # print(edc_endpoint)
             response = urllib.request.urlopen(edc_endpoint).read()
             str(response)
