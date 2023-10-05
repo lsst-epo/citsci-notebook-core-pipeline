@@ -36,7 +36,7 @@ class CitSciPipeline:
         self.email = ""
         self.project = None
         self.client = None
-        if os.getenv("CITSCI_PIPELINE_DEV_MODE") is not None:
+        if os.getenv("CITSCI_PIPELINE_DEV_MODE") is "1" or os.getenv("CITSCI_PIPELINE_DEV_MODE").lower() is "true" :
             self.dev_mode_url = "-dev"
             print("Development mode enabled.")
         else:
@@ -72,7 +72,8 @@ class CitSciPipeline:
                 subject_set.delete()
 
         except:
-            display(f"** Warning: Failed to find the subject set with id: {str(self.vendor_batch_id)}- perhaps it's been deleted?.")
+            pass
+            # display(f"** Warning: Failed to find the subject set with id: {str(self.vendor_batch_id)}- perhaps it's been deleted?.")
         return
 
     def send_zooniverse_manifest(self):
@@ -115,7 +116,7 @@ class CitSciPipeline:
         self.log_step("Checking batch status")
         if self.has_active_batch() == True:
             self.log_step("Active batch exists!!! Continuing because this notebook is in debug mode")
-            raise CitizenScienceError("You cannot send another batch of data while a subject set is still active on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
+            raise CitizenSciencePipelineError("You cannot send another batch of data while a subject set is still active on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
         
         self.log_step("Creating new subject set")
         self.create_new_subject_set(subject_set_name)
@@ -144,7 +145,7 @@ class CitSciPipeline:
         self.step = 0
         self.log_step("Checking batch status")
         if self.has_active_batch() == True:
-            raise CitizenScienceError("You cannot send another batch of data while a subject set is still active on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
+            raise CitizenSciencePipelineError("INCOMPLETE SUBJECT SET EXISTS! You cannot send another batch of data while a subject set is still active (not yet retired) on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
         zip_path = self.zip_image_cutouts(batch_dir)
         self.upload_cutouts(zip_path)
         self.create_new_subject_set(subject_set_name)
@@ -253,13 +254,14 @@ class CitSciPipeline:
         for subject_set in self.project.links.subject_sets:
             try:
                 for completeness_percent in list(subject_set.completeness.values()):
-                    if completeness_percent == 1.0:
+                    if completeness_percent < 1.0:
                         active_batch = True
                         break
                 if active_batch:
                     break
             except:
-                display("    ** Warning! - The Zooniverse client is throwing an error about a missing subject set, this can likely safely be ignored.");
+                pass
+            #     display("    ** Warning! - The Zooniverse client is throwing an error about a missing subject set, this can likely safely be ignored.");
         return active_batch
 
     def log_step(self, msg):
@@ -268,7 +270,7 @@ class CitSciPipeline:
         return
 
 # Custom error handling for this notebook
-class CitizenScienceError(Exception):
+class CitizenSciencePipelineError(Exception):
 
     # Constructor or Initializer
     def __init__(self, value):
