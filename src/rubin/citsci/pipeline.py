@@ -36,7 +36,7 @@ class CitSciPipeline:
         self.email = ""
         self.project = None
         self.client = None
-        if os.getenv("CITSCI_PIPELINE_DEV_MODE") is "1" or os.getenv("CITSCI_PIPELINE_DEV_MODE").lower() is "true" :
+        if os.getenv("CITSCI_PIPELINE_DEV_MODE") == "1" or (os.getenv("CITSCI_PIPELINE_DEV_MODE") is not None and os.getenv("CITSCI_PIPELINE_DEV_MODE").lower() == "true") :
             self.dev_mode_url = "-dev"
             print("Development mode enabled.")
         else:
