@@ -49,6 +49,21 @@ class CitSciPipeline:
         self.email = email
         print("You now are logged in to the Zooniverse platform.")
         return
+    
+    def create_project(self,  **kwargs):
+        name = kwargs.get('project_name')
+        description = kwargs.get('description')
+        
+        if name is None or description is None:
+            raise CitizenSciencePipelineError("Both the 'project_name' and 'description' kwargs are required.") 
+
+        project = Project()
+        project.name = name
+        project.display_name = name
+        project.description = description
+        project.primary_language = "en-us"
+        project.private = False
+        return project.save()
 
     def write_manifest_file(self, manifest, batch_dir):    
         manifest_filename = 'manifest.csv'
