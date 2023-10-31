@@ -1,21 +1,3 @@
-# Note: DO NOT MODIFY!
-
-# Developed for the LSST Rubin Science Platform Notebook Aspect
-# This product includes software developed by the LSST Project
-# (https://www.lsst.org).
-# See the COPYRIGHT file at the top-level directory of this distribution
-# for details of code ownership.
-#
-# This program is free software: you can redistribute, but DO NOT modify
-# it under the terms of the Non-Commercial No-Derivatives International
-# (CC BY-NC-ND 4.0) License as published by the Creative Commons, either
-# version 4 of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# Creative Commons NC-ND License for more details.
-
 import csv, uuid, os, shutil, json, logging, urllib.request, base64
 from datetime import datetime, timezone, timedelta
 from IPython.display import display
@@ -24,9 +6,40 @@ import panoptes_client
 from panoptes_client import Project, SubjectSet, Classification
 
 class CitSciPipeline:
+    """
+        Important: DO NOT MODIFY!
+
+        Developed for the LSST Rubin Science Platform Notebook Aspect
+        This product includes software developed by the LSST Project
+        (https://www.lsst.org).
+        See the COPYRIGHT file at the top-level directory of this distribution
+        for details of code ownership.
+
+        This program is free software: you can redistribute, but DO NOT modify
+        it under the terms of the Non-Commercial No-Derivatives International
+        (CC BY-NC-ND 4.0) License as published by the Creative Commons, either
+        version 4 of the License, or (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        Creative Commons NC-ND License for more details.
+        _______________________________________________________________________
+
+        The purpose of this class is to act as a touchpoint between the Rubin
+        Science Platform Notebook Aspect and the service that exports notebook
+        user data from their notebook filesystem to their Zooniverse project as
+        a new subject set.
+
+        If necessary, Zooniverse project creation is also available as a method.
+    """
     
     def __init__(self):
-        os.environ[base64.b64decode("R09PR0xFX0FQUExJQ0FUSU9OX0NSRURFTlRJQUxT").decode("ascii")] = self.get_gcp_location()
+        """
+            Sets defaults.
+        """
+
+        os.environ[base64.b64decode("R09PR0xFX0FQUExJQ0FUSU9OX0NSRURFTlRJQUxT").decode("ascii")] = self.__get_gcp_location()
         self.vendor_batch_id = 0
         self.project_id = -1
         self.guid = ""
@@ -43,6 +56,13 @@ class CitSciPipeline:
             self.dev_mode_url = ""
 
     def login_to_zooniverse(self, slug_name, email):
+        """
+            This method assumes that you have already created an account on the Zooniverse
+            platform. If not, please go to the Zooniverse website and create an account:
+
+                https://www.zooniverse.org/
+        """
+
         self.client = panoptes_client.Panoptes.connect(login="interactive")
         self.project = Project.find(slug=slug_name)
         self.project_id = self.project.id
@@ -50,12 +70,23 @@ class CitSciPipeline:
         print("You now are logged in to the Zooniverse platform.")
         return
     
-    def create_project(self,  **kwargs):
-        name = kwargs.get('project_name')
-        description = kwargs.get('description')
+    def create_project(self, name, description, make_active_project=False):
+        """
+            Assuming you have a Zooniverse account and have used the login_to_zooniverse()
+            method to log in, this method will create a new project for you with the
+            following settings:
+
+                Primary Language: U.S. English
+                Private: False
+
+            And CitizenSciencePipelineError exception is thrown if the 'name' or 'description' 
+            name arguments are not specified.
+
+            Returns a dict with the newly created project details.
+        """
         
         if name is None or description is None:
-            raise CitizenSciencePipelineError("Both the 'project_name' and 'description' kwargs are required.") 
+            raise CitizenSciencePipelineError("Both the 'project_name' and 'description' arguments are required.") 
 
         project = Project()
         project.name = name
@@ -63,9 +94,23 @@ class CitSciPipeline:
         project.description = description
         project.primary_language = "en-us"
         project.private = False
-        return project.save()
+        project.save()
 
-    def write_manifest_file(self, manifest, batch_dir):    
+        if make_active_project is not None and make_active_project is True:
+            self.project = project.slug
+            self.project_id = project.project.id
+
+        return project.__dict__
+
+    def write_manifest_file(self, manifest, batch_dir):
+        """
+            Takes an array of dicts in Zooniverse canonical format and writes
+            a CSV manifest file to the Notebook Aspect's filesystem in the 
+            specified batch directory.
+
+            Returns the relative path to the manifest.csv
+        """   
+        
         manifest_filename = 'manifest.csv'
         with open(batch_dir + manifest_filename, 'w', newline='') as csvfile:
             fieldnames = list(manifest[0].keys())
@@ -78,6 +123,17 @@ class CitSciPipeline:
         return f"{batch_dir}{manifest_filename}"
     
     def clean_up_unused_subject_set(self):
+        """
+            This method is used when a subject set was created as part of the 
+            data transfer process, but for some reason the process errored out
+            and the empty subject set now needs to be cleaned up (deleted) so
+            that unused subject sets do not clutter the target Zooniverse
+            project.
+
+            This method will quietly fail if there was no subject set found or
+            if the login method hasn't been executed yet.
+        """
+
         self.log_step("Cleaning up unused subject set on the Zooniverse platform, vendor_batch_id : " + str(self.vendor_batch_id))
 
         try:
@@ -91,7 +147,12 @@ class CitSciPipeline:
             # display(f"** Warning: Failed to find the subject set with id: {str(self.vendor_batch_id)}- perhaps it's been deleted?.")
         return
 
-    def send_zooniverse_manifest(self):
+    def __send_zooniverse_manifest(self):
+        """
+            This function is called as part of the send_image_data()  workflow and should
+            not be accessed publicly as unexpected results will occur.
+        """
+
         self.log_step("Sending the manifest URL to Zooniverse")
         display("** Information: subject_set.id: " + str(self.vendor_batch_id) + "; manifest: " + self.manifest_url);
 
@@ -99,7 +160,12 @@ class CitSciPipeline:
         json_response, etag = self.client.post(path='/subject_set_imports', json=payload)
         return
 
-    def create_new_subject_set(self, name):
+    def __create_new_subject_set(self, name):
+        """
+            This function is called as part of the send_image_data() workflow and should
+            not be accessed publicly as unexpected results will occur.
+        """
+
         self.log_step("Creating a new Zooniverse subject set")
 
         # Create a new subject set
@@ -114,12 +180,30 @@ class CitSciPipeline:
         return self.vendor_batch_id
 
     def check_status(self):
+        """
+            This method will check whether or not the manifest file has been moved to the public
+            storage bucket - which occurs at the last step of the process of transferring the
+            new data to the target Zooniverse.
+
+            This method was implemented because the processing time for sending the maximum 
+            number of objects to the Zooniverse can be > 2 minutes, leaving the potential for
+            response timeout.
+
+            Upon success, a JSON response will be returned which includes a "status" of "success"
+            and a "manifest_url" of the URL where the manifest file was uploaded to.
+        """
+
         status_uri = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/citizen-science-ingest-status?guid=" + self.guid
         raw_response = urllib.request.urlopen(status_uri).read()
         response = raw_response.decode('UTF-8')
         return json.loads(response)
 
     def download_batch_metadata(self):
+        """
+            This method will return the most recent manifest URL for the active project if 
+            one exists.
+        """
+
         project_id_str = str(self.project_id)
         dl_response = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/active-batch-metadata?vendor_project_id=" + project_id_str
         raw_response = urllib.request.urlopen(dl_response).read()
@@ -129,21 +213,21 @@ class CitSciPipeline:
     def send_tabular_data(self, subject_set_name, manifest_location):
         self.step = 0
         self.log_step("Checking batch status")
-        if self.has_active_batch() == True:
+        if self.__has_active_batch() == True:
             self.log_step("Active batch exists!!! Continuing because this notebook is in debug mode")
             raise CitizenSciencePipelineError("You cannot send another batch of data while a subject set is still active on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
         
         self.log_step("Creating new subject set")
-        self.create_new_subject_set(subject_set_name)
+        self.__create_new_subject_set(subject_set_name)
 
-        self.upload_tabular_manifest(manifest_location)
+        self.__upload_tabular_manifest(manifest_location)
 
-        self.edc_response = self.alert_edc_of_new_citsci_data(True) # True that the data is tabular
+        self.edc_response = self.__alert_edc_of_new_citsci_data(True) # True that the data is tabular
         
         self.process_edc_response()
         return
            
-    def upload_tabular_manifest(self, manifest_path):
+    def __upload_tabular_manifest(self, manifest_path):
         self.guid = str(uuid.uuid4())
         self.log_step("Uploading tabular data manifest")
         bucket_name = "citizen-science-data"
@@ -156,24 +240,55 @@ class CitSciPipeline:
         return
 
     # Validates that the RSP user is allowed to create a new subject set
-    def send_image_data(self, subject_set_name, batch_dir, cutout_data = None):
+    def send_image_data(self, subject_set_name, batch_dir):
+        """
+            Sends the new data batch to the Rubin EPO Data Center for public hosting
+            so that the data can be added to the target Zooniverse project.
+
+            Several events need to have occurred for this function to complete
+            successfully:
+            
+                1. The user must have already logged into the Zooniverse platform
+                2. The user must have given their subject set a unique name and
+                   passed it into the method as a named argument
+                3. The user must have specified a batch directory where the manifest
+                   file and the subject data exist
+                4. The manifest file must be formatted correctly, see the 
+                   make_manifest_with_images() function in `utils.py` in the Citizen
+                   Science Notebooks repo for more details:
+
+            https://github.com/lsst-epo/citizen-science-notebooks/blob/main/utils.py
+
+            Upon successful completion, the manifest URL will be returned as well as a 
+            message that the data was successfully process, but that more processing
+            will occur on the Zooniverse platform. Once this processing is done on the 
+            Zooniverse platform, the email address associated with the Zooniverse
+            project should receive an email from Zoonivere stating that a new subject
+            set is available.
+        """
+
         self.step = 0
         self.log_step("Checking batch status")
-        if self.has_active_batch() == True:
+        if self.__has_active_batch() == True:
             raise CitizenSciencePipelineError("INCOMPLETE SUBJECT SET EXISTS! You cannot send another batch of data while a subject set is still active (not yet retired) on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
-        zip_path = self.zip_image_cutouts(batch_dir)
-        self.upload_cutouts(zip_path)
-        self.create_new_subject_set(subject_set_name)
+        zip_path = self.__zip_image_cutouts(batch_dir)
+        self.__upload_cutouts(zip_path)
+        self.__create_new_subject_set(subject_set_name)
 
-        self.edc_response = self.alert_edc_of_new_citsci_data()
+        self.edc_response = self.__alert_edc_of_new_citsci_data()
         
-        self.process_edc_response()
+        self.__process_edc_response()
         return
     
-    def get_gcp_location(self):
+    def __get_gcp_location(self):
         return base64.b64decode("L29wdC9sc3N0L3NvZnR3YXJlL2p1cHl0ZXJsYWIvc2VjcmV0cy9idXRsZXItZ2NzLWlkZi1jcmVkcy5qc29u").decode("ascii")
             
-    def process_edc_response(self):
+    def __process_edc_response(self):
+        """
+            This function is called as part of the send_image_data()  workflow and should
+            not be accessed publicly as unexpected results will occur.
+        """
+
         if(self.edc_response == None):
             self.edc_response = { "status": "error", "messages": "An error occurred while processing the data transfer process upload" }
         else:                      
@@ -198,17 +313,27 @@ class CitSciPipeline:
             #     display("        ** " + message)
             return
 
-        self.send_zooniverse_manifest()
+        self.__send_zooniverse_manifest()
         self.log_step("Transfer process complete, but further processing is required on the Zooniverse platform and you will receive an email at " + self.email)
         return
     
-    def zip_image_cutouts(self, batch_dir):
+    def __zip_image_cutouts(self, batch_dir):
+        """
+            This function is called as part of the send_image_data()  workflow and should
+            not be accessed publicly as unexpected results will occur.
+        """
+
         self.guid = str(uuid.uuid4())
         self.log_step("Zipping up all the astro cutouts - this can take a few minutes with large data sets, but unlikely more than 10 minutes.")
         shutil.make_archive("./" + self.guid, 'zip', batch_dir)
         return ["./" + self.guid + '.zip', self.guid + '.zip']
 
-    def upload_cutouts(self, zip_path):
+    def __upload_cutouts(self, zip_path):
+        """
+            This function is called as part of the send_image_data()  workflow and should
+            not be accessed publicly as unexpected results will occur.
+        """
+
         self.log_step("Uploading the citizen science data")
         bucket_name = "citizen-science-data"
         destination_blob_name = zip_path[1]
@@ -221,7 +346,12 @@ class CitSciPipeline:
         blob.upload_from_filename(source_file_name)
         return
 
-    def alert_edc_of_new_citsci_data(self, tabular = False):
+    def __alert_edc_of_new_citsci_data(self, tabular = False):
+        """
+            This function is called as part of the send_image_data()  workflow and should
+            not be accessed publicly as unexpected results will occur.
+        """
+
         project_id_str = str(self.project_id)
         self.log_step("Notifying the Rubin EPO Data Center of the new data, which will finish processing of the data and notify Zooniverse")
 
@@ -238,22 +368,20 @@ class CitSciPipeline:
             return None
         
     def retrieve_data(self, project_id):
-        # panoptes_client.Panoptes.connect(login="interactive")
-        # This project_id is found on Zooniverse by selecting 'build a project' and then selecting the project
-        # You don't need to be the project owner.
+        """
+            Given a project ID of a project that contains a completed workflow with 
+            data that has been classified, this method will request the classified/
+            completed data and download it if it is available.
+        """
+
         classification_export = panoptes_client.Project(project_id).get_export(
             "classifications"
         )
         list_rows = []
-        # counter = 0
-        # If the following line throws an error, restart the kernel and rerun the cell.
+
         for row in classification_export.csv_reader():
-            # if counter == 0:
-            #     header = row
-            # else:
             list_rows.append(row)
-            # counter += 1
-        # return pd.DataFrame(list_rows, columns=header)
+
         return list_rows
 
     # def send_butler_data_to_edc():
@@ -264,7 +392,12 @@ class CitSciPipeline:
     #     manifestUrl = response.decode('UTF-8')
     #     return
 
-    def has_active_batch(self):
+    def __has_active_batch(self):
+        """
+            This function is called as part of the send_image_data()  workflow and should
+            not be accessed publicly as unexpected results will occur.
+        """
+
         active_batch = False
         for subject_set in self.project.links.subject_sets:
             try:
@@ -286,6 +419,11 @@ class CitSciPipeline:
 
 # Custom error handling for this notebook
 class CitizenSciencePipelineError(Exception):
+    """
+        A custom exception for describing errors that occurred due to system or human error
+        while using the rubin.citsci PyPI package in the Rubin Science Platform's Notebook
+        Aspect.
+    """
 
     # Constructor or Initializer
     def __init__(self, value):
