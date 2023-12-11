@@ -1,4 +1,4 @@
-import csv, uuid, os, shutil, json, logging, urllib.request, base64
+import csv, uuid, os, shutil, json, logging, urllib.request, base64, re
 from datetime import datetime, timezone, timedelta
 from IPython.display import display
 import google.cloud.storage as storage
@@ -61,14 +61,29 @@ class CitSciPipeline:
             platform. If not, please go to the Zooniverse website and create an account:
 
                 https://www.zooniverse.org/
+
+            Email address validation occurs before the login prompt is called.
         """
 
-        self.client = panoptes_client.Panoptes.connect(login="interactive")
-        self.project = Project.find(slug=slug_name)
-        self.project_id = self.project.id
-        self.email = email
-        print("You now are logged in to the Zooniverse platform.")
+        valid_email = self.__validate_email_address(email)
+
+        if(valid_email):
+            self.email = email
+            self.client = panoptes_client.Panoptes.connect(login="interactive")
+            self.project = Project.find(slug=slug_name)
+            self.project_id = self.project.id
+            
+            print("You now are logged in to the Zooniverse platform.")
+        else:
+            print("Invalid email address! Please check the email address you provided and ensure it is correct.")
         return
+    
+    def __validate_email_address(email):
+        regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+        if re.fullmatch(regex, email):
+            return True
+        else:
+            return False
     
     def create_project(self, name, description, make_active_project=False):
         """
