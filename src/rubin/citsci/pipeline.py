@@ -1,6 +1,7 @@
-import csv, uuid, os, shutil, json, logging, urllib.request, base64, re
+import csv, uuid, os, shutil, json, logging, urllib.request, base64, re, requests
 from datetime import datetime, timezone, timedelta
 from IPython.display import display
+from importlib.metadata import version
 import google.cloud.storage as storage
 import panoptes_client
 from panoptes_client import Project, SubjectSet, Classification
@@ -62,9 +63,12 @@ class CitSciPipeline:
 
                 https://www.zooniverse.org/
 
-            Email address validation occurs before the login prompt is called.
+            Email address validation occurs before the login prompt is called and also
+            checks if the latest version of this package is installed.
         """
 
+        self.__check_package_version()
+        
         valid_email = self.__validate_email_address(email)
 
         if(valid_email):
@@ -76,6 +80,22 @@ class CitSciPipeline:
             print("You now are logged in to the Zooniverse platform.")
         else:
             print("Invalid email address! Please check the email address you provided and ensure it is correct.")
+        return
+    
+    def __check_package_version():
+        try:
+            installed_version = version('rubin.citsci')
+            res = requests.get('https://pypi.org/simple/rubin-citsci/', headers = {"Accept": "application/vnd.pypi.simple.v1+json"})
+            res_json = json.loads(res.content.decode('utf-8'))
+            latest_version = res_json["versions"][-1]
+
+            if (installed_version == latest_version) is False:
+                print("WARNING! : You currently have v" + installed_version + " of this package installed, but v" + latest_version + " is available.")
+                print("To install the latest version, open up a terminal tab and run the following command:")
+                print("    pip install --upgrade --force-reinstall rubin.citsci")
+                print("After the upgrade installation has finished, please restart the kernel for the changes to take effect.")
+        except Exception as e:
+                print("ERROR! : An error occurred while attempting to validate that the latest version of the rubin.citsci package is installed. Please notify the EPO citizen science team that this error message has occurred!")
         return
     
     def __validate_email_address(email):
