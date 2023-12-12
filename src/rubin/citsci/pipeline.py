@@ -82,7 +82,7 @@ class CitSciPipeline:
             print("Invalid email address! Please check the email address you provided and ensure it is correct.")
         return
     
-    def __check_package_version():
+    def __check_package_version(self):
         try:
             installed_version = version('rubin.citsci')
             res = requests.get('https://pypi.org/simple/rubin-citsci/', headers = {"Accept": "application/vnd.pypi.simple.v1+json"})
@@ -98,7 +98,7 @@ class CitSciPipeline:
                 print("ERROR! : An error occurred while attempting to validate that the latest version of the rubin.citsci package is installed. Please notify the EPO citizen science team that this error message has occurred!")
         return
     
-    def __validate_email_address(email):
+    def __validate_email_address(self, email):
         regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
         if re.fullmatch(regex, email):
             return True
