@@ -394,7 +394,7 @@ class CitSciPipeline:
             resource = "citizen-science-image-ingest" if tabular == False else "citizen-science-tabular-ingest"
             edc_endpoint = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/" + resource + "?email=" + self.email + "&vendor_project_id=" + project_id_str + "&guid=" + self.guid + "&vendor_batch_id=" + str(self.vendor_batch_id) + "&debug=True"
             # print(edc_endpoint)
-            response = urllib.request.urlopen(edc_endpoint).read()
+            response = urllib.request.urlopen(edc_endpoint, timeout=3600).read()
             str(response)
             manifestUrl = response.decode('UTF-8')
             return manifestUrl
