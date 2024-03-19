@@ -228,7 +228,7 @@ class CitSciPipeline:
             and a "manifest_url" of the URL where the manifest file was uploaded to.
         """
 
-        status_uri = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/citizen-science-ingest-status?guid=" + self.guid
+        status_uri = f"https://rsp-data-exporter{self.dev_mode_url}-dot-skyviewer.uw.r.appspot.com/citizen-science-ingest-status?guid={self.guid}"
         raw_response = urllib.request.urlopen(status_uri).read()
         response = raw_response.decode('UTF-8')
         return json.loads(response)
@@ -240,7 +240,7 @@ class CitSciPipeline:
         """
 
         project_id_str = str(self.project_id)
-        dl_response = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/active-batch-metadata?vendor_project_id=" + project_id_str
+        dl_response = f"https://rsp-data-exporter{self.dev_mode_url}-dot-skyviewer.uw.r.appspot.com/active-batch-metadata?vendor_project_id={project_id_str}"
         raw_response = urllib.request.urlopen(dl_response).read()
         response = raw_response.decode('UTF-8')
         return json.loads(response)
@@ -274,8 +274,7 @@ class CitSciPipeline:
         blob.upload_from_filename(manifest_path)
         return
 
-    # Validates that the RSP user is allowed to create a new subject set
-    def send_image_data(self, subject_set_name, batch_dir):
+    def send_image_data(self, subject_set_name, zip_path):
         """
             Sends the new data batch to the Rubin EPO Data Center for public hosting
             so that the data can be added to the target Zooniverse project.
@@ -306,7 +305,6 @@ class CitSciPipeline:
         self.log_step("Checking batch status")
         if self.__has_active_batch() == True:
             raise CitizenSciencePipelineError("INCOMPLETE SUBJECT SET EXISTS! You cannot send another batch of data while a subject set is still active (not yet retired) on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
-        zip_path = self.__zip_image_cutouts(batch_dir)
         self.__upload_cutouts(zip_path)
         self.__create_new_subject_set(subject_set_name)
 
@@ -352,16 +350,15 @@ class CitSciPipeline:
         self.log_step("Transfer process complete, but further processing is required on the Zooniverse platform and you will receive an email at " + self.email)
         return
     
-    def __zip_image_cutouts(self, batch_dir):
+    def zip_image_cutouts(self, batch_dir):
         """
-            This function is called as part of the send_image_data()  workflow and should
-            not be accessed publicly as unexpected results will occur.
+            This function is responsible for zipping up all the cutouts that will be sent
+            to the Zooniverse, and returns the path to the zip file.
         """
 
         self.guid = str(uuid.uuid4())
-        self.log_step("Zipping up all the astro cutouts - this can take a few minutes with large data sets, but unlikely more than 10 minutes.")
-        shutil.make_archive("./" + self.guid, 'zip', batch_dir)
-        return ["./" + self.guid + '.zip', self.guid + '.zip']
+        shutil.make_archive(f"./{self.guid}", 'zip', batch_dir)
+        return [f"./{self.guid}.zip", f"{self.guid}.zip"]
 
     def __upload_cutouts(self, zip_path):
         """
@@ -392,7 +389,7 @@ class CitSciPipeline:
 
         try:
             resource = "citizen-science-image-ingest" if tabular == False else "citizen-science-tabular-ingest"
-            edc_endpoint = "https://rsp-data-exporter" + self.dev_mode_url + "-dot-skyviewer.uw.r.appspot.com/" + resource + "?email=" + self.email + "&vendor_project_id=" + project_id_str + "&guid=" + self.guid + "&vendor_batch_id=" + str(self.vendor_batch_id) + "&debug=True"
+            edc_endpoint = f"https://rsp-data-exporter{self.dev_mode_url}-dot-skyviewer.uw.r.appspot.com/{resource}?email={self.email}&vendor_project_id={project_id_str}&guid={self.guid}&vendor_batch_id={str(self.vendor_batch_id)}&debug=True"
             # print(edc_endpoint)
             response = urllib.request.urlopen(edc_endpoint, timeout=3600).read()
             str(response)
