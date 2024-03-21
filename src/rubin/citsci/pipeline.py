@@ -301,6 +301,11 @@ class CitSciPipeline:
             set is available.
         """
 
+        print("Send the data to Zooniverse")
+        if len(subject_set_name) == 0:
+            print("Please set the subject set name - did not send batch")
+            return
+
         self.step = 0
         self.log_step("Checking batch status")
         if self.__has_active_batch() == True:
