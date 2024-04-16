@@ -274,7 +274,7 @@ class CitSciPipeline:
         blob.upload_from_filename(manifest_path)
         return
 
-    def send_image_data(self, subject_set_name, zip_path, **options):
+    def send_image_data(self, subject_set_name, zip_path):
         """
             Sends the new data batch to the Rubin EPO Data Center for public hosting
             so that the data can be added to the target Zooniverse project.
@@ -313,9 +313,7 @@ class CitSciPipeline:
         self.__upload_cutouts(zip_path)
         self.__create_new_subject_set(subject_set_name)
 
-        contains_flipbook = options.get("flipbook") if "flipbook" in options else False
-
-        self.edc_response = self.__alert_edc_of_new_citsci_data(flipbook=contains_flipbook)
+        self.edc_response = self.__alert_edc_of_new_citsci_data()
         
         self.__process_edc_response()
         return
@@ -385,7 +383,7 @@ class CitSciPipeline:
         blob.upload_from_filename(source_file_name)
         return
 
-    def __alert_edc_of_new_citsci_data(self, flipbook=False, tabular = False):
+    def __alert_edc_of_new_citsci_data(self, tabular = False):
         """
             This function is called as part of the send_image_data()  workflow and should
             not be accessed publicly as unexpected results will occur.
@@ -396,7 +394,7 @@ class CitSciPipeline:
 
         try:
             resource = "citizen-science-image-ingest" if tabular == False else "citizen-science-tabular-ingest"
-            edc_endpoint = f"https://rsp-data-exporter{self.dev_mode_url}-dot-skyviewer.uw.r.appspot.com/{resource}?email={self.email}&vendor_project_id={project_id_str}&guid={self.guid}&vendor_batch_id={str(self.vendor_batch_id)}&flipbook={flipbook}&debug=True"
+            edc_endpoint = f"https://rsp-data-exporter{self.dev_mode_url}-dot-skyviewer.uw.r.appspot.com/{resource}?email={self.email}&vendor_project_id={project_id_str}&guid={self.guid}&vendor_batch_id={str(self.vendor_batch_id)}&debug=True"
             # print(edc_endpoint)
             response = urllib.request.urlopen(edc_endpoint, timeout=3600).read()
             str(response)
