@@ -69,9 +69,10 @@ class CitSciPipeline:
         """
 
         project_template = Project.find(slug=project_name)
-        my_template_project = project_template.copy()
-        my_template_project.save()
-        return my_template_project
+        self.project = project_template.copy()
+        self.project.save()
+        self.project_id = self.project.id
+        return self.project
 
     def login_to_zooniverse(self, slug_name, email):
         """
@@ -94,6 +95,7 @@ class CitSciPipeline:
             if slug_name is not "":
                 self.project = Project.find(slug=slug_name)
                 self.project_id = self.project.id
+            else:
                 print("No project was provided! Run the project-template copy cell if you would like to create a new one.")
             
             print("You now are logged in to the Zooniverse platform.")
