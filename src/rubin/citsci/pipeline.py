@@ -56,7 +56,7 @@ class CitSciPipeline:
         else:
             self.dev_mode_url = ""
 
-    def create_new_project_from_template(project_name="crhiggs/template-test"):
+    def create_new_project_from_template(self, project_name="crhiggs/template-test"):
         """
             This method will create a new project under the authenticated user's account
             based on the provided project template slug. If no project template slug is
