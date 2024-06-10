@@ -69,9 +69,10 @@ class CitSciPipeline:
         """
 
         project_template = Project.find(slug=project_name)
-        my_template_project = project_template.copy()
-        my_template_project.save()
-        return my_template_project
+        self.project = project_template.copy()
+        self.project.save()
+        self.project_id = self.project.id
+        return self.project
 
     def login_to_zooniverse(self, slug_name, email):
         """
@@ -91,8 +92,11 @@ class CitSciPipeline:
         if(valid_email):
             self.email = email
             self.client = panoptes_client.Panoptes.connect(login="interactive")
-            self.project = Project.find(slug=slug_name)
-            self.project_id = self.project.id
+            if slug_name is not "":
+                self.project = Project.find(slug=slug_name)
+                self.project_id = self.project.id
+            else:
+                print("No project was provided! Run the project-template copy cell if you would like to create a new one.")
             
             print("You now are logged in to the Zooniverse platform.")
         else:
@@ -163,6 +167,9 @@ class CitSciPipeline:
             Returns the relative path to the manifest.csv
         """   
         
+        if self.project is "":
+            print("Please create or specify a Zooniverse project before attempting to write a manifest file.")
+            return
         manifest_filename = 'manifest.csv'
         with open(batch_dir + manifest_filename, 'w', newline='') as csvfile:
             fieldnames = list(manifest[0].keys())
@@ -318,6 +325,9 @@ class CitSciPipeline:
             set is available.
         """
 
+        if self.project is "":
+            print("Please create or specify a Zooniverse project before attempting to send image data!")
+            return
         print("Send the data to Zooniverse")
         if len(subject_set_name) == 0:
             print("Please set the subject set name - did not send batch")
