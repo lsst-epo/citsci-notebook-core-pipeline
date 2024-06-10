@@ -56,6 +56,23 @@ class CitSciPipeline:
         else:
             self.dev_mode_url = ""
 
+    def create_new_project_from_template(project_name="crhiggs/template-test"):
+        """
+            This method will create a new project under the authenticated user's account
+            based on the provided project template slug. If no project template slug is
+            provided then a new project will be created from a Rubin test project 
+            template.
+
+            Must be authenticated into the Zooniverse API or an exception will occur.
+
+            Returns an instance of a Zooniverse project.
+        """
+
+        project_template = Project.find(slug=project_name)
+        my_template_project = project_template.copy()
+        my_template_project.save()
+        return my_template_project
+
     def login_to_zooniverse(self, slug_name, email):
         """
             This method assumes that you have already created an account on the Zooniverse
