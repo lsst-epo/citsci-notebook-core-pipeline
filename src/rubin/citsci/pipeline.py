@@ -96,7 +96,7 @@ class CitSciPipeline:
                 self.project = Project.find(slug=slug_name)
                 self.project_id = self.project.id
             else:
-                print("No project was provided! Run the project-template copy cell if you would like to create a new one.")
+                print("No project was provided! Run the create_new_project_from_template() cell if you would like to create a new one.")
             
             print("You now are logged in to the Zooniverse platform.")
         else:
@@ -115,6 +115,7 @@ class CitSciPipeline:
                 print("To install the latest version, open up a terminal tab and run the following command:")
                 print("    pip install --upgrade --force-reinstall rubin.citsci")
                 print("After the upgrade installation has finished, please restart the kernel for the changes to take effect.")
+                print("Failing to keep the rubin.citsci package up-to-date will likely cause the following cells to fail.")
         except Exception as e:
                 print("ERROR! : An error occurred while attempting to validate that the latest version of the rubin.citsci package is installed. Please notify the EPO citizen science team that this error message has occurred!")
         return
@@ -167,7 +168,7 @@ class CitSciPipeline:
             Returns the relative path to the manifest.csv
         """   
         
-        if self.project is "":
+        if self.project == "":
             print("Please create or specify a Zooniverse project before attempting to write a manifest file.")
             return
         manifest_filename = 'manifest.csv'
@@ -325,7 +326,7 @@ class CitSciPipeline:
             set is available.
         """
 
-        if self.project is "":
+        if self.project == "":
             print("Please create or specify a Zooniverse project before attempting to send image data!")
             return
         print("Send the data to Zooniverse")
