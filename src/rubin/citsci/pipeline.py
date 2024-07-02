@@ -56,10 +56,17 @@ class CitSciPipeline:
         else:
             self.dev_mode_url = ""
 
-    def create_new_project_from_template(self, project_name="crhiggs/template-test"):
+    def project_sanity_check(self):
+        if self.project is None or self.project_id == -1:
+            print("No project has been selected! Either re-run the login cell to select the project you would like to send data to or run the cell that create a project from the Rubin template!")
+            return False
+        else:
+            return True
+
+    def create_new_project_from_template(self, project_id=21302):
         """
             This method will create a new project under the authenticated user's account
-            based on the provided project template slug. If no project template slug is
+            based on the provided Zooniverse project ID. If no project template ID is
             provided then a new project will be created from a Rubin test project 
             template.
 
@@ -68,7 +75,7 @@ class CitSciPipeline:
             Returns an instance of a Zooniverse project.
         """
 
-        project_template = Project.find(slug=project_name)
+        project_template = Project.find(id=project_id)
         self.project = project_template.copy()
         self.project.save()
         self.project_id = self.project.id
@@ -187,7 +194,7 @@ class CitSciPipeline:
             Returns the relative path to the manifest.csv
         """   
         
-        if self.project == "":
+        if self.project_sanity_check is False:
             print("Please create or specify a Zooniverse project before attempting to write a manifest file.")
             return
         manifest_filename = 'manifest.csv'
@@ -345,7 +352,7 @@ class CitSciPipeline:
             set is available.
         """
 
-        if self.project == "":
+        if self.project_sanity_check is False:
             print("Please create or specify a Zooniverse project before attempting to send image data!")
             return
         print("Send the data to Zooniverse")
@@ -410,6 +417,8 @@ class CitSciPipeline:
             to the Zooniverse, and returns the path to the zip file.
         """
 
+        if self.project_sanity_check is False:
+            print("WARNING: You haven't specified a project yet, please ensure you have specified a project before proceeding.")
         self.guid = str(uuid.uuid4())
         shutil.make_archive(f"./{self.guid}", 'zip', batch_dir)
         return [f"./{self.guid}.zip", f"{self.guid}.zip"]
