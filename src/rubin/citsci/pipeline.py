@@ -92,15 +92,43 @@ class CitSciPipeline:
         if(valid_email):
             self.email = email
             self.client = panoptes_client.Panoptes.connect(login="interactive")
+            print("You now are logged in to the Zooniverse platform.")
+            
             if slug_name is not "":
                 self.project = Project.find(slug=slug_name)
                 self.project_id = self.project.id
             else:
-                print("No project was provided! Run the create_new_project_from_template() cell if you would like to create a new one.")
-            
-            print("You now are logged in to the Zooniverse platform.")
+                self.__log_slug_names()
+                return
         else:
             print("Invalid email address! Please check the email address you provided and ensure it is correct.")
+        return
+    
+    def __log_slug_names(self):
+        projects = self.client.get(f"/projects?owner={self.client.username}")
+        slugnames = []
+        has_projects = False
+
+        print("\n*==* Your Project Slugs *==*\n")
+        for proj in projects:
+            if type(proj) is dict:
+                for p in proj["projects"]:
+                    has_projects = True
+                    slugnames.append(p["slug"])
+                    print(p["slug"])
+        print("\n*==========================*\n")
+
+        slug_name = input("Which project would you like to send data to (copy & paste the slug name here)?")
+
+        if has_projects == True:
+            if slug_name in slugnames:
+                self.project = Project.find(slug=slug_name)
+                self.project_id = self.project.id
+                print(f"Current project set to: {slug_name}")
+            else:
+                print("\n### Invalid project slug name! Please re-run this cell and copy-paste a slug name from the provided list.")
+        else:
+            print("You do not have any projects on the Zooniverse platform. Please run the cell that creates a new project based on the project template.")
         return
     
     def __check_package_version(self):
