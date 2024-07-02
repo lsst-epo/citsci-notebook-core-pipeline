@@ -74,13 +74,8 @@ class CitSciPipeline:
         self.project_id = self.project.id
         return self.project
 
-    def login_to_zooniverse(self, slug_name, email):
+    def login_to_zooniverse(self, email):
         """
-            This method assumes that you have already created an account on the Zooniverse
-            platform. If not, please go to the Zooniverse website and create an account:
-
-                https://www.zooniverse.org/
-
             Email address validation occurs before the login prompt is called and also
             checks if the latest version of this package is installed.
         """
@@ -93,13 +88,9 @@ class CitSciPipeline:
             self.email = email
             self.client = panoptes_client.Panoptes.connect(login="interactive")
             print("You now are logged in to the Zooniverse platform.")
-            
-            if slug_name is not "":
-                self.project = Project.find(slug=slug_name)
-                self.project_id = self.project.id
-            else:
-                self.__log_slug_names()
-                return
+            self.__log_slug_names()
+
+            return
         else:
             print("Invalid email address! Please check the email address you provided and ensure it is correct.")
         return
