@@ -10,7 +10,7 @@ authors = [
 ]
 description = "The companion package to the Rubin citizen science notebooks."
 
-version = "0.6.1"
+version = "0.6.3"
 readme = "README.md"
 dependencies = [
     "panoptes_client",
