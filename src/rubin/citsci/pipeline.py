@@ -94,7 +94,7 @@ class CitSciPipeline:
         if(valid_email):
             self.email = email
             self.client = panoptes_client.Panoptes.connect(login="interactive")
-            if self.client.username is not None:
+            if self.client.logged_in is True:
                 print("You now are logged in to the Zooniverse platform.")
                 self.__log_slug_names()
             else:
