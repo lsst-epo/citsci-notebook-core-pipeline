@@ -92,6 +92,8 @@ class CitSciPipeline:
         valid_email = self.__validate_email_address(email)
 
         if(valid_email):
+            print("Loading and running utilities to establish a link with Zooniverse")
+            print("Enter your Zooniverse username followed by password below")  
             self.email = email
             self.client = panoptes_client.Panoptes.connect(login="interactive")
             if self.client.logged_in is True:
