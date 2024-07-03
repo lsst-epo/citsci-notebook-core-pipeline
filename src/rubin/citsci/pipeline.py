@@ -75,11 +75,19 @@ class CitSciPipeline:
             Returns an instance of a Zooniverse project.
         """
 
-        project_template = Project.find(id=project_id)
-        self.project = project_template.copy()
-        self.project.save()
-        self.project_id = self.project.id
-        return self.project
+        if self.project is not None:
+            print("\n### WARNING - You have already select a project to send data to! Please only proceed if you intend to create a new project and would like to set this new project as the target for sending new data to.\n")
+        print("\n### WARNING - You are about to create a new project based on a predefined Rubin template project!\n")
+        response = input("Are you sure you would like to create a new project? (type out 'yes')")
+        if response.lower() == "yes":
+            project_template = Project.find(id=project_id)
+            self.project = project_template.copy()
+            self.project.save()
+            self.project_id = self.project.id
+            return self.project
+        else:
+            print("\nNew project creation has been cancelled.")
+            return
 
     def login_to_zooniverse(self, email):
         """
@@ -175,19 +183,27 @@ class CitSciPipeline:
         if name is None or description is None:
             raise CitizenSciencePipelineError("Both the 'project_name' and 'description' arguments are required.") 
 
-        project = Project()
-        project.name = name
-        project.display_name = name
-        project.description = description
-        project.primary_language = "en-us"
-        project.private = False
-        project.save()
+        if self.project is not None:
+            print("\n### WARNING - You have already select a project to send data to! Please only proceed if you intend to create a new project and would like to set this new project as the target for sending new data to.\n")
+        print("\n### WARNING - You are about to create a new project!\n")
+        response = input("Are you sure you would like to create a new project? (type out 'yes')")
+        if response.lower() == "yes":
+            project = Project()
+            project.name = name
+            project.display_name = name
+            project.description = description
+            project.primary_language = "en-us"
+            project.private = False
+            project.save()
 
-        if make_active_project is not None and make_active_project is True:
-            self.project = project.slug
-            self.project_id = project.project.id
+            if make_active_project is not None and make_active_project is True:
+                self.project = project.slug
+                self.project_id = project.project.id
 
-        return project.__dict__
+            return project.__dict__
+        else:
+            print("\nNew project creation has been cancelled.")
+            return
 
     def write_manifest_file(self, manifest, batch_dir):
         """
