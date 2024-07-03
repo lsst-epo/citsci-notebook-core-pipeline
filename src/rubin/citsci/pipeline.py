@@ -61,6 +61,9 @@ class CitSciPipeline:
             print("No project has been selected! Either re-run the login cell to select the project you would like to send data to or run the cell that create a project from the Rubin template!")
             return False
         else:
+            print("The project is NOT null!")
+            print(str(self.project))
+            print(str(self.project_id))
             return True
 
     def create_new_project_from_template(self, project_id=21302):
@@ -119,9 +122,8 @@ class CitSciPipeline:
                     print(p["slug"])
         print("\n*==========================*\n")
 
-        slug_name = input("Which project would you like to send data to (copy & paste the slug name here)?")
-
         if has_projects == True:
+            slug_name = input("Which project would you like to send data to (copy & paste the slug name here)?")
             if slug_name in slugnames:
                 self.project = Project.find(slug=slug_name)
                 self.project_id = self.project.id
