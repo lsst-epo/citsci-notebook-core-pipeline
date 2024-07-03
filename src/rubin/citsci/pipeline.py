@@ -92,6 +92,8 @@ class CitSciPipeline:
         valid_email = self.__validate_email_address(email)
 
         if(valid_email):
+            print("Loading and running utilities to establish a link with Zooniverse")
+            print("Enter your Zooniverse username followed by password below")  
             self.email = email
             self.client = panoptes_client.Panoptes.connect(login="interactive")
             if self.client.logged_in is True:
@@ -119,9 +121,8 @@ class CitSciPipeline:
                     print(p["slug"])
         print("\n*==========================*\n")
 
-        slug_name = input("Which project would you like to send data to (copy & paste the slug name here)?")
-
         if has_projects == True:
+            slug_name = input("Which project would you like to send data to (copy & paste the slug name here)?")
             if slug_name in slugnames:
                 self.project = Project.find(slug=slug_name)
                 self.project_id = self.project.id
@@ -197,7 +198,7 @@ class CitSciPipeline:
             Returns the relative path to the manifest.csv
         """   
         
-        if self.project_sanity_check is False:
+        if self.project_sanity_check() is False:
             print("Please create or specify a Zooniverse project before attempting to write a manifest file.")
             return
         manifest_filename = 'manifest.csv'
@@ -209,7 +210,10 @@ class CitSciPipeline:
             for cutout in manifest:
                 writer.writerow(cutout)
 
-        return f"{batch_dir}{manifest_filename}"
+        manifest_path = f"{batch_dir}{manifest_filename}"
+        print(f"The manifest CSV file can be found at the following relative path: {manifest_path}")
+
+        return manifest_path
     
     def clean_up_unused_subject_set(self):
         """
@@ -355,7 +359,7 @@ class CitSciPipeline:
             set is available.
         """
 
-        if self.project_sanity_check is False:
+        if self.project_sanity_check() is False:
             print("Please create or specify a Zooniverse project before attempting to send image data!")
             return
         print("Send the data to Zooniverse")
@@ -420,7 +424,7 @@ class CitSciPipeline:
             to the Zooniverse, and returns the path to the zip file.
         """
 
-        if self.project_sanity_check is False:
+        if self.project_sanity_check() is False:
             print("WARNING: You haven't specified a project yet, please ensure you have specified a project before proceeding.")
         self.guid = str(uuid.uuid4())
         shutil.make_archive(f"./{self.guid}", 'zip', batch_dir)
