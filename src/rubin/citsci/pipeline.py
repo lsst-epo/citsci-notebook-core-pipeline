@@ -199,7 +199,7 @@ class CitSciPipeline:
             Returns the relative path to the manifest.csv
         """   
         
-        if self.project_sanity_check is False:
+        if self.project_sanity_check() is False:
             print("Please create or specify a Zooniverse project before attempting to write a manifest file.")
             return
         manifest_filename = 'manifest.csv'
@@ -357,7 +357,7 @@ class CitSciPipeline:
             set is available.
         """
 
-        if self.project_sanity_check is False:
+        if self.project_sanity_check() is False:
             print("Please create or specify a Zooniverse project before attempting to send image data!")
             return
         print("Send the data to Zooniverse")
@@ -422,7 +422,7 @@ class CitSciPipeline:
             to the Zooniverse, and returns the path to the zip file.
         """
 
-        if self.project_sanity_check is False:
+        if self.project_sanity_check() is False:
             print("WARNING: You haven't specified a project yet, please ensure you have specified a project before proceeding.")
         self.guid = str(uuid.uuid4())
         shutil.make_archive(f"./{self.guid}", 'zip', batch_dir)
