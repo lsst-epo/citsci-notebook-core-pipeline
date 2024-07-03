@@ -61,9 +61,6 @@ class CitSciPipeline:
             print("No project has been selected! Either re-run the login cell to select the project you would like to send data to or run the cell that create a project from the Rubin template!")
             return False
         else:
-            print("The project is NOT null!")
-            print(str(self.project))
-            print(str(self.project_id))
             return True
 
     def create_new_project_from_template(self, project_id=21302):
@@ -211,7 +208,10 @@ class CitSciPipeline:
             for cutout in manifest:
                 writer.writerow(cutout)
 
-        return f"{batch_dir}{manifest_filename}"
+        manifest_path = f"{batch_dir}{manifest_filename}"
+        print(f"The manifest CSV file can be found at the following relative path: {manifest_path}")
+
+        return manifest_path
     
     def clean_up_unused_subject_set(self):
         """
