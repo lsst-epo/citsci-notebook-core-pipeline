@@ -152,7 +152,7 @@ class CitSciPipeline:
         print("\n*==========================*\n")
 
         if has_projects == True:
-            slug_name = input("Which project would you like to send data to (copy & paste the slug name here)?")
+            slug_name = input("Which project would you like to connect to? (copy & paste the slug name here)?")
             if slug_name in slugnames:
                 self.project = Project.find(slug=slug_name)
                 self.project_id = self.project.id
