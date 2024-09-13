@@ -4,7 +4,7 @@ from IPython.display import display
 from importlib.metadata import version
 import google.cloud.storage as storage
 import panoptes_client
-from panoptes_client import Project, SubjectSet, Classification
+from panoptes_client import Project, SubjectSet, Classification, Workflow
 
 class CitSciPipeline:
     """
@@ -113,6 +113,28 @@ class CitSciPipeline:
             return
         else:
             print("Invalid email address! Please check the email address you provided and ensure it is correct.")
+        return
+    
+    def list_workflows(self):
+        """
+            If the user has logged into the Zooniverse platform via the login_to_zooniverse()
+            function and selected a project, then this cell will list all active workflows for
+            the selected project.
+        """
+
+        if self.project is None:
+            print("Please log in first using login_to_zooniverse() first before attempting to retrieve workflows.")
+            return
+        
+        active_workflows = self.project.raw["links"]["active_workflows"]
+        if len(active_workflows) > 0:
+            print("\n*==* Your Workflows *==*\n")
+            for workflow in active_workflows:
+                display_name = Workflow.find(workflow).raw["display_name"]
+                print(f"Workflow ID: {workflow} - Display Name: {display_name}")
+            print("\n*==========================*\n")
+        else:
+            print("There are no active workflows for the project you have selected.")
         return
     
     def __log_slug_names(self):
