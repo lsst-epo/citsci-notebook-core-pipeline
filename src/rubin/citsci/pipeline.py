@@ -420,7 +420,7 @@ class CitSciPipeline:
         return
     
     def __get_gcp_location(self):
-        return base64.b64decode("L29wdC9sc3N0L3NvZnR3YXJlL2p1cHl0ZXJsYWIvc2VjcmV0cy9idXRsZXItZ2NzLWlkZi1jcmVkcy5qc29u").decode("ascii")
+        return base64.b64decode("L29wdC9sc3N0L3NvZnR3YXJlL2p1cHl0ZXJsYWIvc2VjcmV0cy9ydWJpbi1lcG8tY2l0LXNjaS1waXBlbGluZS5qc29u").decode("ascii")
             
     def __process_edc_response(self):
         """
