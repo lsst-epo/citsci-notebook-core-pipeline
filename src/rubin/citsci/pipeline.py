@@ -275,7 +275,6 @@ class CitSciPipeline:
 
         except:
             pass
-            # display(f"** Warning: Failed to find the subject set with id: {str(self.vendor_batch_id)}- perhaps it's been deleted?.")
         return
 
     def __send_zooniverse_manifest(self):
@@ -344,8 +343,8 @@ class CitSciPipeline:
     def send_tabular_data(self, subject_set_name, manifest_location):
         self.step = 0
         self.log_step("Checking batch status")
-        if self.__has_active_batch() == True:
-            self.log_step("Active batch exists!!! Continuing because this notebook is in debug mode")
+        if self.__active_batch_count() >= 3:
+            self.log_step("You cannot have more than three incomplete subject sets. Continuing because this notebook is in debug mode")
             raise CitizenSciencePipelineError("You cannot send another batch of data while a subject set is still active on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
         
         self.log_step("Creating new subject set")
@@ -407,8 +406,8 @@ class CitSciPipeline:
 
         self.step = 0
         self.log_step("Checking batch status")
-        if self.__has_active_batch() == True:
-            raise CitizenSciencePipelineError("INCOMPLETE SUBJECT SET EXISTS! You cannot send another batch of data while a subject set is still active (not yet retired) on the Zooniverse platform - you can only send a new batch of data if all subject sets associated to a project have been completed.")
+        if self.__active_batch_count() >= 3:
+            raise CitizenSciencePipelineError("You have more than three incomplete subject sets! You cannot send another batch of data while three or more subject sets are in a state of `active` (not yet retired) on the Zooniverse platform - you can only send a new batch of data if you have less than three active subject sets.")
         self.__upload_cutouts(zip_path)
         self.__create_new_subject_set(subject_set_name)
 
@@ -438,7 +437,6 @@ class CitSciPipeline:
                 display("** Additional information:")
                 for message in self.edc_response["messages"]:
                     logging.warning(message)
-                    # display("    ** " + message)
             else:
                 self.log_step("Success! The URL to the manifest file can be found here:")
                 display(self.manifest_url)
@@ -448,8 +446,6 @@ class CitSciPipeline:
             logging.error(self.edc_response["messages"])
             logging.error(f"Email address: {self.email}")
             logging.error(f"Timestamp: {str(datetime.now(timezone(-timedelta(hours=7))))}")
-            # for message in edc_response["messages"]:
-            #     display("        ** " + message)
             return
 
         self.__send_zooniverse_manifest()
@@ -498,7 +494,6 @@ class CitSciPipeline:
         try:
             resource = "citizen-science-image-ingest" if tabular == False else "citizen-science-tabular-ingest"
             edc_endpoint = f"https://rsp-data-exporter{self.dev_mode_url}-dot-skyviewer.uw.r.appspot.com/{resource}?email={self.email}&vendor_project_id={project_id_str}&guid={self.guid}&vendor_batch_id={str(self.vendor_batch_id)}&flipbook={flipbook}&debug=True"
-            # print(edc_endpoint)
             response = urllib.request.urlopen(edc_endpoint, timeout=3600).read()
             str(response)
             manifestUrl = response.decode('UTF-8')
@@ -524,33 +519,21 @@ class CitSciPipeline:
 
         return list_rows
 
-    # def send_butler_data_to_edc():
-    #     log_step("Notifying the Rubin EPO Data Center of the new data, which will finish processing of the data and notify Zooniverse")
-    #     edcEndpoint = "https://rsp-data-exporter-e3g4rcii3q-uc.a.run.app/citizen-science-butler-ingest?email=" + email + "&collection=" + datasetId + "&sourceId=" + sourceId + "&vendorProjectId=" + str(projectId) + "&vendor_batch_id=" + str(vendor_batch_id)
-    #     log_step('Processing data for Zooniverse, this may take up to a few minutes.')
-    #     response = urllib.request.urlopen(edcEndpoint).read()
-    #     manifestUrl = response.decode('UTF-8')
-    #     return
-
-    def __has_active_batch(self):
+    def __active_batch_count(self):
         """
             This function is called as part of the send_image_data()  workflow and should
-            not be accessed publicly as unexpected results will occur.
+            not be accessed publicly as unexpected results will occur. It checks the number
+            of active subject returns the count.
         """
-
-        active_batch = False
+        active_batches = 0
         for subject_set in self.project.links.subject_sets:
             try:
                 for completeness_percent in list(subject_set.completeness.values()):
                     if completeness_percent < 1.0:
-                        active_batch = True
-                        break
-                if active_batch:
-                    break
+                        active_batches += 1
             except:
                 pass
-            #     display("    ** Warning! - The Zooniverse client is throwing an error about a missing subject set, this can likely safely be ignored.");
-        return active_batch
+        return active_batches
 
     def log_step(self, msg):
         self.step += 1
